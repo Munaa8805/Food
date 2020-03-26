@@ -1,5 +1,7 @@
 require("@babel/polyfill");
 import Search from "./model/search";
+import { elements } from "./view/base";
+import * as searchView from "./view/searchView";
 
 // Wep app tolob
 // Khailtiin query , ur dun
@@ -10,24 +12,27 @@ import Search from "./model/search";
 const state = {};
 const controlSearch = async () => {
   //// 1. Web-ees hailtiin tulhuur ugiig gargaj abna
-  const query = "pizza";
+  const query = searchView.getInput();
 
   if (query) {
     //// 2. Tuhain tulhuur ugeer haidag shineer hailtiin obektiig uusgej ogno
     state.search = new Search(query);
 
     //// 3. Hailt hiihed zoriulj delgetsiig beltgene
+    searchView.clearSearchQuery();
+    searchView.clearSearchResult();
 
     //// 4. hailtiig guitsetgene
     await state.search.doSearch();
 
     //// 5. hailtiin ur dung delgetsend uzuulne
-    console.log(state.search.result);
+    if (state.search.result === undefined) alert("Хайлтаар илэрцгүй");
+    else searchView.renderRecipes(state.search.result);
   } else {
     alert("Та хайлтын утга оруулна уу ");
   }
 };
-document.querySelector(".search").addEventListener("submit", e => {
+elements.searchForm.addEventListener("submit", e => {
   e.preventDefault();
   controlSearch();
 });
