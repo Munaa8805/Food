@@ -2,6 +2,8 @@ require("@babel/polyfill");
 import Search from "./model/search";
 import { elements, renderLoader, clearLoader } from "./view/base";
 import * as searchView from "./view/searchView";
+import Recipe from "./model/recipe";
+import { renderRecipe, clearRecipe } from "./view/recipeView";
 
 // Wep app tolob
 // Khailtiin query , ur dun
@@ -10,6 +12,9 @@ import * as searchView from "./view/searchView";
 // zahialj baigaa buteegdehuunii nairlaga
 
 const state = {};
+////
+//// MVC- хайлтын контроллер
+////
 const controlSearch = async () => {
   //// 1. Web-ees hailtiin tulhuur ugiig gargaj abna
   const query = searchView.getInput();
@@ -47,3 +52,29 @@ elements.pageButtons.addEventListener("click", e => {
     searchView.renderRecipes(state.search.result, gotoPageNumber);
   }
 });
+
+///// recipe
+///// жорын контроллер
+////
+const controlRecipe = async () => {
+  //// 1. URL-aas ID salgaj abna
+  const id = window.location.hash.replace("#", "");
+
+  //// 2. Joriin modeliig uusgej ogno
+  state.recipe = new Recipe(id);
+
+  //// 3. Delgetsiig  beltgene
+  clearRecipe();
+  renderLoader(elements.recipeDiv);
+
+  //// 4. Joroo tataj abchirna
+  await state.recipe.getRecipe();
+  //// 5. Joriig guitsetgeh hugatsaa bolon ortsiig tootsoolno
+  clearLoader();
+  state.recipe.caclTime();
+  state.recipe.calcHuniiToo();
+  //// 6. Joriig delgetsend gargana
+  renderRecipe(state.recipe);
+};
+window.addEventListener("hashchange", controlRecipe);
+window.addEventListener("load", controlRecipe);
