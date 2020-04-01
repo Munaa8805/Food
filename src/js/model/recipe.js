@@ -21,7 +21,7 @@ export default class Recipe {
 
   caclTime() {
     //// nairlaga burt oiroltsoogoor 5 minut zartsuulna
-    this.time = this.ingredients.lenght * 5;
+    this.time = this.ingredients.lenght;
   }
   calcHuniiToo() {
     this.huniiToo = 4;

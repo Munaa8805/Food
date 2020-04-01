@@ -3,7 +3,15 @@ import Search from "./model/search";
 import { elements, renderLoader, clearLoader } from "./view/base";
 import * as searchView from "./view/searchView";
 import Recipe from "./model/recipe";
-import { renderRecipe, clearRecipe } from "./view/recipeView";
+import List from "./model/list";
+import Like from "./model/like";
+import * as likesView from "./view/likesview";
+import * as listView from "./view/listview";
+import {
+  renderRecipe,
+  clearRecipe,
+  highlightSelectedRecipe
+} from "./view/recipeView";
 
 // Wep app tolob
 // Khailtiin query , ur dun
@@ -12,6 +20,8 @@ import { renderRecipe, clearRecipe } from "./view/recipeView";
 // zahialj baigaa buteegdehuunii nairlaga
 
 const state = {};
+/// like menu-g haana
+likesView.toggleLikeMenu(0);
 ////
 //// MVC- хайлтын контроллер
 ////
@@ -59,22 +69,98 @@ elements.pageButtons.addEventListener("click", e => {
 const controlRecipe = async () => {
   //// 1. URL-aas ID salgaj abna
   const id = window.location.hash.replace("#", "");
+  if (!state.likes) state.likes = new Like();
+  ///url deer ID bgaa esehiig shalgana.
+  if (id) {
+    //// 2. Joriin modeliig uusgej ogno
+    state.recipe = new Recipe(id);
 
-  //// 2. Joriin modeliig uusgej ogno
-  state.recipe = new Recipe(id);
+    //// 3. Delgetsiig  beltgene
+    clearRecipe();
+    renderLoader(elements.recipeDiv);
+    highlightSelectedRecipe(id);
 
-  //// 3. Delgetsiig  beltgene
-  clearRecipe();
-  renderLoader(elements.recipeDiv);
-
-  //// 4. Joroo tataj abchirna
-  await state.recipe.getRecipe();
-  //// 5. Joriig guitsetgeh hugatsaa bolon ortsiig tootsoolno
-  clearLoader();
-  state.recipe.caclTime();
-  state.recipe.calcHuniiToo();
-  //// 6. Joriig delgetsend gargana
-  renderRecipe(state.recipe);
+    //// 4. Joroo tataj abchirna
+    await state.recipe.getRecipe();
+    //// 5. Joriig guitsetgeh hugatsaa bolon ortsiig tootsoolno
+    clearLoader();
+    state.recipe.caclTime();
+    state.recipe.calcHuniiToo();
+    //// 6. Joriig delgetsend gargana
+    renderRecipe(state.recipe, state.likes.isLiked(id));
+  }
 };
-window.addEventListener("hashchange", controlRecipe);
-window.addEventListener("load", controlRecipe);
+// window.addEventListener("hashchange", controlRecipe);
+// window.addEventListener("load", controlRecipe);
+["hashchange", "load"].forEach(e => window.addEventListener(e, controlRecipe));
+
+////
+//// Nairlaganii controller heregtei
+////
+
+const controlList = () => {
+  ///// Nairlaganii model-iig uusgene
+  state.list = new List();
+  ///// delgets tseberlene
+  listView.clearItems();
+  ///// Ug model ruu odoo baigaa joriig hiine.
+  state.recipe.ingredients.forEach(n => {
+    //// tuhain nairlagiig model ruu hiine
+    const item = state.list.addItem(n);
+    //// tuhain nairlagiig delgetsend gargana
+    listView.renderItem(item);
+  });
+};
+
+////
+//// like controller
+////
+const controlLike = () => {
+  ////Like -iin model uusgene
+  if (!state.likes) state.likes = new Like();
+  //// Delgetsend baigaa joriig id olj abah
+  const currentRecipeId = state.likes.id;
+  //// Ene joriig likes
+  if (state.likes.isLiked(currentRecipeId)) {
+    //// Likelsan bol like-ig boliulna
+    state.likes.deleteLike(currentRecipeId);
+    ////Haragdaj baigaa like-iig tsesnees ustganaa
+    likesView.deleteLike(currentRecipeId);
+    //// Like btn haragdaj bdliig boliulah
+    likesView.toggleLikeBtn(false);
+  } else {
+    //// Like-laagui bol like hiine
+
+    const newLike = state.likes.addLike(
+      currentRecipeId,
+      state.recipe.title,
+      state.recipe.publisher,
+      state.recipe.image_url
+    );
+    //// render like
+    likesView.renderLike(newLike);
+    // Like tobchiig lieklasan baidliig likelsan bolgoh
+    likesView.toggleLikeBtn(true);
+  }
+
+  ///// like menu
+  likesView.toggleLikeMenu(state.likes.getNumberOfLikes());
+};
+
+////
+
+elements.recipeDiv.addEventListener("click", e => {
+  if (e.target.matches(".recipe__btn, .recipe__btn *")) {
+    controlList();
+  } else if (e.target.matches(".recipe__love, .recipe__love *")) {
+    controlLike();
+  }
+});
+elements.shoppingList.addEventListener("click", e => {
+  //// click hiisen LI elementiing data-itemID shuuj gargah
+  const id = e.target.closest(".shopping__item").dataset.itemid;
+  //// Model-oos ustaganaa
+  state.list.deleteItem(id);
+  //// delgetsees ustgana
+  listView.deleteItem(id);
+});

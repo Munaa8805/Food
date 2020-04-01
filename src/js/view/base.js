@@ -4,7 +4,10 @@ export const elements = {
   searchResultList: document.querySelector(".results__list"),
   searchResultDiv: document.querySelector(".results"),
   pageButtons: document.querySelector(".results__pages"),
-  recipeDiv: document.querySelector(".recipe")
+  recipeDiv: document.querySelector(".recipe"),
+  shoppingList: document.querySelector(".shopping__list"),
+  likesMenu: document.querySelector(".likes__field"),
+  likeList: document.querySelector(".likes__list")
 };
 
 export const elementStrings = {
